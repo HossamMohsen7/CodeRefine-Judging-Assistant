@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:7860"
+    env_file: .env
+    environment:
+      ALLOWED_ORIGIN: http://localhost:8000
+      HF_HOME: /hf
+    volumes:
+      # sqlite DBs + jsonl logs (attempts, review queue, scorecards) survive restarts
+      - ./logs:/app/logs
+      # step 3 output: vector store + BGE-M3 model cache survive restarts
+      - chroma_db:/app/data/chroma_db
+      - hf_cache:/hf
+    # build the knowledge base only if the volume is empty (first run)
+    command: >
+      sh -c "[ -n \"$(ls -A data/chroma_db 2>/dev/null)\" ] ||
+      poetry run python -m src.ingestion.build_knowledge_base;
+      poetry run uvicorn src.api.main:app --host 0.0.0.0 --port 7860"
+    restart: unless-stopped
+
+volumes:
+  chroma_db:
+  hf_cache:
