@@ -70,9 +70,9 @@ def gather_node(state: GradingState) -> dict:
     try:
         found_files = find_submission_files(repo_url)
     except Exception as e:
-        # Can't access the repo at all
-        # flagged low-confidence downstream. We still continue so the
-        # agent produces *something* the judge can see, rather than crashing.
+        # Can't access the repo at all -- flagged low-confidence downstream
+        # AND surfaced as repo_error, which POST /grade turns into a 422
+        # instead of a fake scorecard (see src/api/main.py).
         return {
             "file_tree": [],
             "readme_content": "",
@@ -85,6 +85,7 @@ def gather_node(state: GradingState) -> dict:
                     "source_type": "text",
                 }
             ],
+            "repo_error": str(e),
         }
 
     readme_content = fetch_readme(repo_url) if found_files["readme"] else ""
@@ -423,68 +424,3 @@ def verify_node(state: GradingState) -> dict:
         "final_scorecard": final_scorecard,
         "verification_notes": "; ".join(verification_notes) if verification_notes else "All evidence checked out.",
     }
-
-
-def feedback_node(state: dict) -> dict:
-    """
-    The practice-trial equivalent of format_node but produces
-    improvement FEEDBACK, never a score. Used for early trials that
-    teams should be able to see without judge approval, per the explicit
-    requirement that early trials must never carry any grading.
-
-    Deliberately a separate function, not a "format_node with scores
-    hidden" the prompt below never mentions numbers, points, or
-    percentages at all, so there's no scoring language for the model to
-    produce even by accident. This node also does NOT identify or fix bugs
-    for the team it points at what's missing or unclear relative to
-    the rubric's topics, without writing or suggesting actual solutions,
-    matching "help them see gaps, don't help them solve it."
-    """
-    topic_text = "\n".join(f"- {r['criterion']}: {r['description']}" for r in RUBRIC)
-
-    prompt = f"""This is a PRACTICE submission review. Do NOT score anything,
-do NOT assign points or percentages, and do NOT suggest specific fixes or
-solutions -- only point out what's missing, unclear, or worth strengthening,
-so the team can improve it themselves before their real submission.
-
-Topics a complete submission usually addresses:
-{topic_text}
-
-Observations from this submission:
-{json.dumps(state["raw_notes"], indent=2)}
-
-CRITICAL RULE: Every piece of feedback must trace back to something
-literally present in the observations above e.g. "no evidence of a
-data model was found" is fine, "your data model needs a users table"
-is NOT fine (that's giving them the solution, not pointing at a gap).
-
-Return a JSON object with one key, "feedback", containing a list of
-objects, one per topic, each with: criterion, feedback (1-2 sentences
-describing what's present or missing, never prescribing a fix),
-evidence_ids (list of relevant observation ids, or empty if nothing was
-found for this topic), and confidence ("high", "medium", or "low").
-Example shape: {{"feedback": [{{"criterion": "...", "feedback": "...", "evidence_ids": [], "confidence": "..."}}]}}"""
-
-    llm_json = get_llm(json_mode=True)
-    response = llm_json.invoke(prompt)
-    try:
-        draft_feedback = json.loads(response.content)["feedback"]
-    except (json.JSONDecodeError, TypeError, KeyError):
-        draft_feedback = [
-            {"criterion": r["criterion"], "feedback": "Could not generate feedback for this topic.",
-             "evidence_ids": [], "confidence": "low"}
-            for r in RUBRIC
-        ]
-
-    # Same ID-based grounding check as verify_node, reused here for the
-    # same reason: exact id existence is reliable, fuzzy text matching
-    # isn't.
-    notes_by_id = {note["id"]: note for note in state["raw_notes"] if "id" in note}
-    final_feedback = []
-    for entry in draft_feedback:
-        valid_ids = [i for i in entry.get("evidence_ids", []) if i in notes_by_id]
-        entry["evidence"] = [notes_by_id[i] for i in valid_ids]
-        entry.pop("evidence_ids", None)
-        final_feedback.append(entry)
-
-    return {"feedback": final_feedback}

@@ -26,47 +26,21 @@ class CriterionScorecard(TypedDict):
     confidence: str           # "high" | "medium" | "low"  per-criterion, not global
 
 
-class CriterionFeedback(TypedDict):
-    """
-    Improvement feedback for one criterion, used ONLY in practice trials.
-    Deliberately has no score field at all practice trials never
-    produce a number, by design, so there's no risk of a practice result
-    being mistaken for an official grade anywhere downstream.
-    """
-    criterion: str
-    feedback: str                      # what to improve, not a grade
-    evidence: list[CriterionEvidence]
-    confidence: str
-
-
-class PracticeFeedbackState(TypedDict):
-    """
-    State for a practice-trial run: gather evidence (same as official
-    grading), then produce feedback instead of a scorecard. No approve/
-    release step exists for this path at all it's a structurally
-    separate, simpler pipeline from GradingState above, not a variant of
-    it, specifically so practice feedback can never accidentally behave
-    like an official grade.
-    """
-    team_name: str
-    repo_url: str
-    raw_notes: Optional[list[CriterionEvidence]]
-    feedback: Optional[list[CriterionFeedback]]
-
-
 class GradingState(TypedDict):
     """
-    The full state object LangGraph passes between nodes for one team's
-    grading run.
+    The full state object LangGraph passes between nodes for one grading
+    run. No team_name: nothing in gather/format/verify reads it, and
+    POST /grade's request body doesn't carry one (victoris-backend tracks
+    which team a repo belongs to, not this service).
     """
     # --- input, set once at the start ---
-    team_name: str
     repo_url: str
 
     # --- filled in by the "gather" step ---
     file_tree: Optional[list[str]]
     readme_content: Optional[str]
     raw_notes: Optional[list[CriterionEvidence]]  # ungraded observations, tied to files/lines
+    repo_error: Optional[str]  # set only when the repo itself couldn't be reached at all
 
     # --- filled in by the "format" step ---
     draft_scorecard: Optional[list[CriterionScorecard]]

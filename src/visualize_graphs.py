@@ -1,7 +1,6 @@
 """
 Produces:
     logs/grading_graph.png
-    logs/practice_graph.png
     logs/chatbot_graph.png
 """
 
@@ -19,11 +18,10 @@ def save_graph_image(compiled_graph, filename: str) -> None:
 
 
 def main():
-    from src.agent.graph import build_grading_graph, build_practice_graph
+    from src.agent.graph import build_grading_graph
     from src.chatbot.graph import build_chat_graph
 
     save_graph_image(build_grading_graph(), "grading_graph.png")
-    save_graph_image(build_practice_graph(), "practice_graph.png")
     save_graph_image(build_chat_graph(), "chatbot_graph.png")
 
 
