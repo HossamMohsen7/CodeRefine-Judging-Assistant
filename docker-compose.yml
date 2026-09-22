@@ -2,15 +2,15 @@ services:
   app:
     build: .
     ports:
-      - "8000:7860"
+      - "5003:7860"
     env_file: .env
     environment:
-      ALLOWED_ORIGIN: http://localhost:8000
       HF_HOME: /hf
     volumes:
-      # sqlite DBs + jsonl logs (attempts, review queue, scorecards) survive restarts
-      - ./logs:/app/logs
-      # step 3 output: vector store + BGE-M3 model cache survive restarts
+      # Chroma vector store (knowledge base) + BGE-M3 model cache survive
+      # restarts. No SQLite/JSONL volume: this service is stateless --
+      # victoris-backend owns all trial/chat persistence (see
+      # docs/specs/2026-09-22-coderefine-judging-platform.md).
       - chroma_db:/app/data/chroma_db
       - hf_cache:/hf
     # build the knowledge base only if the volume is empty (first run)

@@ -1075,12 +1075,12 @@ EOF
 
 `slowapi` (rate limiting) and `python-multipart` (form/file upload parsing) are now unused: `slowapi` was only imported by the old `src/api/main.py` (rewritten in Task 3, dropped it), and a grep across `src/` finds no `UploadFile`/`Form(...)`/`python_multipart` usage anywhere, present or past -- `python-multipart` was declared but never actually used. `TEAM_PASSWORD`/`JUDGE_PASSWORD` are replaced by `SERVICE_AUTH_TOKEN` (Task 3). `docker-compose.yml`'s `./logs:/app/logs` volume existed to persist the SQLite DBs and JSONL logs deleted in Task 4 -- with no runtime code writing into `logs/` any more (only the manually-run `src/visualize_graphs.py` dev tool does, and its output doesn't need to survive a container restart), that volume mount is removed. The `chroma_db` and `hf_cache` volumes stay untouched, per the spec.
 
-- [ ] **Step 1: Grep to confirm `slowapi` and `python-multipart` are unused**
+- [x] **Step 1: Grep to confirm `slowapi` and `python-multipart` are unused**
 
 Run: `grep -rn "slowapi\|multipart\|UploadFile" src/`
 Expected: no output (empty) -- Task 3 already removed the only `slowapi` import, and `python-multipart` was never imported anywhere.
 
-- [ ] **Step 2: Remove the two unused dependencies from `pyproject.toml`**
+- [x] **Step 2: Remove the two unused dependencies from `pyproject.toml`**
 
 In `src/../pyproject.toml`'s `[tool.poetry.dependencies]` block, delete these two lines:
 
@@ -1096,13 +1096,13 @@ python-multipart = "^0.0.12"
 
 Leave every other dependency (`fastapi`, `uvicorn`, `pydantic`, `langgraph`, `langchain`, `langchain-groq`, `langchain-chroma`, `langchain-huggingface`, `sentence-transformers`, `chromadb`, `pygithub`, `python-dotenv`, `pymupdf`) and the `[tool.poetry.group.dev.dependencies]` block (`pytest`, `black`) unchanged.
 
-- [ ] **Step 3: Regenerate the lock file and reinstall**
+- [x] **Step 3: Regenerate the lock file and reinstall**
 
 Run: `poetry lock`
 Run: `poetry install`
 Expected: both succeed; `poetry.lock` no longer lists `slowapi` or `python-multipart`.
 
-- [ ] **Step 4: Update `.env.example`**
+- [x] **Step 4: Update `.env.example`**
 
 Replace the full contents of `.env.example` with:
 
@@ -1112,7 +1112,7 @@ GITHUB_TOKEN=
 SERVICE_AUTH_TOKEN=
 ```
 
-- [ ] **Step 5: Update `docker-compose.yml`**
+- [x] **Step 5: Update `docker-compose.yml`**
 
 Replace the full contents of `docker-compose.yml` with:
 
@@ -1146,12 +1146,12 @@ volumes:
 
 This drops the `ALLOWED_ORIGIN` environment variable (CORS middleware is gone -- Task 3) and the `./logs:/app/logs` volume line, and updates the volumes comment.
 
-- [ ] **Step 6: Run the full test suite to verify nothing broke**
+- [x] **Step 6: Run the full test suite to verify nothing broke**
 
 Run: `poetry run pytest -v`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add pyproject.toml poetry.lock .env.example docker-compose.yml
