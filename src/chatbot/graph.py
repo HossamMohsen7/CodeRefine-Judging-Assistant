@@ -1,13 +1,12 @@
 """
-The team chatbot, rebuilt as a small LangGraph graph so it gets real
-short-term memory the ability to remember earlier questions in the
-same conversation, not just answer each question in isolation.
-
+The team chatbot, as a small LangGraph graph. Stateless by design: the
+caller (victoris-backend) supplies whatever conversation history it wants
+remembered on each call -- see
+docs/specs/2026-09-22-coderefine-judging-platform.md, POST /chat.
 """
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import InMemorySaver
 import re
 
 import json
@@ -16,7 +15,6 @@ from src.chatbot.state import ChatState
 from src.chatbot.prompts import CHATBOT_SYSTEM_PROMPT
 from src.ingestion.retriever import load_retriever
 from src.agent.llm import get_llm
-from src.logging_utils import log_question
 
 _retriever = None
 
@@ -98,10 +96,11 @@ remotely related to the question. Example: [0, 2]"""
 
 def chat_node(state: ChatState) -> dict:
     """
-    The only node in this graph. Runs once per message: retrieves relevant
-    rules for the LATEST message, but sends the FULL conversation history
-    to the LLM that combination is what lets it answer follow-ups
-    correctly while still grounding answers in retrieved rules.
+    The only node in this graph. Runs once per call: retrieves relevant
+    rules for the LATEST message, but sends the FULL message list (caller-
+    supplied history + the new question) to the LLM that combination is
+    what lets it answer follow-ups correctly while still grounding answers
+    in retrieved rules.
     """
     latest_question = state["messages"][-1].content
 
@@ -117,20 +116,13 @@ def chat_node(state: ChatState) -> dict:
             f"[{d.metadata['section']}]\n{d.page_content[:MAX_CHARS_PER_CHUNK]}" for d in relevant_docs
         )
     else:
-
         context = ""
 
     system_message = SystemMessage(content=CHATBOT_SYSTEM_PROMPT.format(context=context))
     llm = get_llm(temperature=0.2)
 
-    # Full history + fresh system prompt each turn the system prompt is
-    # rebuilt every time because the retrieved context changes per question.
     response = llm.invoke([system_message] + state["messages"])
-
-    cleaned_content = _strip_speculative_procedure_sections(response.content)
-    response.content = cleaned_content
-
-    log_question(latest_question, cleaned_content)
+    response.content = _strip_speculative_procedure_sections(response.content)
     return {"messages": [response]}
 
 
@@ -139,9 +131,9 @@ def build_chat_graph():
     graph.add_node("chat", chat_node)
     graph.set_entry_point("chat")
     graph.add_edge("chat", END)
-    # checkpointer=InMemorySaver() is the one line that turns this from a
-    # stateless graph into one with short-term memory.
-    return graph.compile(checkpointer=InMemorySaver())
+    # No checkpointer: the caller supplies whatever history it wants
+    # remembered on every call, instead of this service remembering it.
+    return graph.compile()
 
 
 _chat_app = None
@@ -154,13 +146,18 @@ def _get_chat_app():
     return _chat_app
 
 
-def ask(question: str, thread_id: str = "default-session") -> str:
+def ask(question: str, history: list[dict] | None = None) -> str:
     """
-    thread_id groups messages into one conversation. Same thread_id across
-    calls = the agent remembers earlier turns. A different thread_id would
-    start a completely fresh conversation with no memory of the first.
+    history: prior turns as [{"role": "user" | "assistant", "content": str}, ...],
+    oldest first -- exactly what POST /chat's request body carries. No
+    thread_id: this call is stateless, all context comes from history.
     """
+    messages = []
+    for turn in history or []:
+        message_cls = HumanMessage if turn["role"] == "user" else AIMessage
+        messages.append(message_cls(content=turn["content"]))
+    messages.append(HumanMessage(content=question))
+
     app = _get_chat_app()
-    config = {"configurable": {"thread_id": thread_id}}
-    result = app.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    result = app.invoke({"messages": messages})
     return result["messages"][-1].content

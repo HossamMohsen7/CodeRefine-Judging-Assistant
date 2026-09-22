@@ -384,7 +384,7 @@ EOF
 
 The chatbot's short-term memory used to come from `checkpointer=InMemorySaver()` keyed by `thread_id` — per the spec, the assistant must keep no conversation state at all; victoris-backend persists every message and passes the relevant recent history back on each call. `chat_node`'s actual logic (retrieve → grade relevance → answer using the full message list) is unchanged; only how the message list gets built changes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/test_chatbot_graph.py`:
 
@@ -442,12 +442,12 @@ def test_ask_sends_supplied_history_to_the_llm(monkeypatch):
     ]
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `poetry run pytest tests/test_chatbot_graph.py -v`
 Expected: FAIL — `ask()` currently requires/uses a `thread_id` and a checkpointer, so this call either errors or the assertion on `sent_human_messages` fails (the current `ask()` never mixes in caller-supplied history at all).
 
-- [ ] **Step 3: Rewrite `src/chatbot/graph.py`**
+- [x] **Step 3: Rewrite `src/chatbot/graph.py`**
 
 Replace the full contents of `src/chatbot/graph.py` with:
 
@@ -619,7 +619,7 @@ def ask(question: str, history: list[dict] | None = None) -> str:
 
 This drops the `InMemorySaver` import/checkpoint and the `log_question` import/call (the question/answer audit log is deleted in Task 4 — victoris-backend now persists every chat message itself).
 
-- [ ] **Step 4: Rewrite `src/chatbot/chatbot.py`**
+- [x] **Step 4: Rewrite `src/chatbot/chatbot.py`**
 
 Replace the full contents of `src/chatbot/chatbot.py` with:
 
@@ -660,17 +660,17 @@ if __name__ == "__main__":
     print(f"A: {answer_question(second_question, history=history)}")
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `poetry run pytest tests/test_chatbot_graph.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Run the full test suite to verify nothing else broke**
+- [x] **Step 6: Run the full test suite to verify nothing else broke**
 
 Run: `poetry run pytest -v`
 Expected: PASS (all tests from Task 1 plus this one).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/chatbot/graph.py src/chatbot/chatbot.py tests/test_chatbot_graph.py

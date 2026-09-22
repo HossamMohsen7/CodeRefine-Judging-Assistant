@@ -1,17 +1,14 @@
 """
-Thin backward-compatible entry point. The real logic now lives in
-graph.py, which adds short-term conversation memory -- this file just
-re-exposes a simple function name so nothing else needs to change.
+Thin backward-compatible entry point. The real logic lives in graph.py.
 """
 
- 
 from src.chatbot.graph import ask
- 
- 
-def answer_question(question: str, thread_id: str = "default-session") -> str:
-    return ask(question, thread_id=thread_id)
- 
- 
+
+
+def answer_question(question: str, history: list[dict] | None = None) -> str:
+    return ask(question, history=history)
+
+
 if __name__ == "__main__":
     # Loading .env here specifically, because running this file directly
     # (poetry run python -m src.chatbot.chatbot) skips main.py entirely --
@@ -21,9 +18,17 @@ if __name__ == "__main__":
     load_dotenv()
 
     # Quick manual test -- two related questions, second one is a follow-up
-    # that only makes sense WITH memory of the first.
-    print("Q: How many members can be on a team?")
-    print(f"A: {answer_question('How many members can be on a team?')}\n")
+    # that only makes sense when the caller passes the first turn back in
+    # as history (this service no longer remembers it on its own).
+    first_question = "How many members can be on a team?"
+    first_answer = answer_question(first_question)
+    print(f"Q: {first_question}")
+    print(f"A: {first_answer}\n")
 
-    print("Q: And what age do they need to be?")
-    print(f"A: {answer_question('And what age do they need to be?')}")
+    second_question = "And what age do they need to be?"
+    history = [
+        {"role": "user", "content": first_question},
+        {"role": "assistant", "content": first_answer},
+    ]
+    print(f"Q: {second_question}")
+    print(f"A: {answer_question(second_question, history=history)}")
