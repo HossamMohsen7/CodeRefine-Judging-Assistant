@@ -1506,27 +1506,27 @@ EOF
 
 **Interfaces:** none.
 
-- [ ] **Step 1: Run the full test suite**
+- [x] **Step 1: Run the full test suite**
 
 Run: `poetry run pytest -v`
 Expected: PASS, all tests across `tests/test_diagram_reader.py`, `tests/test_gather_node.py`, `tests/test_grade_formatting.py`, `tests/test_chatbot_graph.py`, `tests/test_api_main.py`.
 
-- [ ] **Step 2: Confirm the app actually imports and boots**
+- [x] **Step 2: Confirm the app actually imports and boots**
 
 Run: `poetry run python -c "from src.api.main import app; print([r.path for r in app.routes])"`
 Expected: prints a list of paths including `/chat`, `/grade`, `/health` (plus FastAPI's built-in `/openapi.json`, `/docs`, `/redoc`), with no import errors.
 
-- [ ] **Step 3: Grep for any stray references to removed endpoints or concepts**
+- [x] **Step 3: Grep for any stray references to removed endpoints or concepts**
 
 Run: `grep -rn "login/team\|login/judge\|thread_id\|InMemorySaver\|TEAM_PASSWORD\|JUDGE_PASSWORD\|session_token" src/ tests/ *.md docker-compose.yml Dockerfile .env.example`
 Expected: no output. (`thread_id`/`InMemorySaver` should not appear anywhere any more; the rest were the old auth's vocabulary.)
 
-- [ ] **Step 4: Confirm no code still imports a deleted module**
+- [x] **Step 4: Confirm no code still imports a deleted module**
 
 Run: `grep -rn "from src.api.auth\|from src.api.job_queue\|from src.agent.attempt_tracker\|from src.agent.practice_store\|from src.agent.review_queue\|from src.agent.report\|from src.logging_utils\|from src.batch_grade\|import src.batch_grade" src/ tests/`
 Expected: no output.
 
-- [ ] **Step 5: Confirm the repo tree matches the "keep" list from the spec**
+- [x] **Step 5: Confirm the repo tree matches the "keep" list from the spec**
 
 Run: `git status` (should be clean -- everything from Tasks 1-6 already committed) and `git ls-files src/ | sort`
 Expected: `src/api/main.py`, `src/agent/{graph,nodes,state,rubric,llm}.py`, `src/chatbot/{graph,chatbot,state,prompts}.py`, `src/ingestion/*`, `src/tools/*`, `src/main.py`, `src/visualize_graphs.py`, `src/debug_retrieval.py` -- and none of `src/api/auth.py`, `src/api/job_queue.py`, `src/agent/attempt_tracker.py`, `src/agent/practice_store.py`, `src/agent/review_queue.py`, `src/agent/report.py`, `src/logging_utils.py`, `src/batch_grade.py`.
