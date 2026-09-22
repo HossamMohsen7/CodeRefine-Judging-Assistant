@@ -1190,13 +1190,13 @@ EOF
 
 `project_explain.md` is a 156-line narrative walkthrough of the team/judge/practice-trial/website flow -- that whole flow now belongs to victoris-backend and coderefine-platform, not this repo, so rewriting it here would just be describing another repo's responsibility. It's deleted rather than rewritten; `CLAUDE.md` and `README.md` are now short enough to cover the trimmed service on their own. `src/ingestion/README.md` and `src/tools/README.md` describe modules kept unchanged and stay as they are.
 
-- [ ] **Step 1: Delete `project_explain.md`**
+- [x] **Step 1: Delete `project_explain.md`**
 
 ```bash
 git rm project_explain.md
 ```
 
-- [ ] **Step 2: Rewrite `CLAUDE.md`**
+- [x] **Step 2: Rewrite `CLAUDE.md`**
 
 Replace the full contents of `CLAUDE.md` with:
 
@@ -1245,7 +1245,7 @@ Two independent LangGraph systems that never call each other:
 - `llm.py` fallback model id is `llama/llama-3.3-70b-versatile`; verify against Groq's actual id if fallback ever errors.
 ```
 
-- [ ] **Step 3: Rewrite `README.md`**
+- [x] **Step 3: Rewrite `README.md`**
 
 Replace the full contents of `README.md` with:
 
@@ -1314,7 +1314,7 @@ No conversation state is kept here -- `history` is exactly what the caller wants
 Each `src/` subfolder has its own README with the file-by-file detail.
 ```
 
-- [ ] **Step 4: Rewrite `SETUP_GUIDE.md`**
+- [x] **Step 4: Rewrite `SETUP_GUIDE.md`**
 
 Replace the full contents of `SETUP_GUIDE.md` with:
 
@@ -1322,11 +1322,11 @@ Replace the full contents of `SETUP_GUIDE.md` with:
 # Setup Guide
 
 ## Prerequisites (one-time)
-- [ ] Python 3.11+ installed and on PATH (`python --version` shows a version)
-- [ ] Poetry installed: `pip install poetry`
-- [ ] Groq API key, console.groq.com then API Keys
-- [ ] GitHub Personal Access Token, github.com then Settings, Developer settings, Personal access tokens, "repo" read scope
-- [ ] A `SERVICE_AUTH_TOKEN` value agreed with whoever runs victoris-backend (any long random string works -- it's a shared secret, not a password anyone types in)
+- [x] Python 3.11+ installed and on PATH (`python --version` shows a version)
+- [x] Poetry installed: `pip install poetry`
+- [x] Groq API key, console.groq.com then API Keys
+- [x] GitHub Personal Access Token, github.com then Settings, Developer settings, Personal access tokens, "repo" read scope
+- [x] A `SERVICE_AUTH_TOKEN` value agreed with whoever runs victoris-backend (any long random string works -- it's a shared secret, not a password anyone types in)
 
 ## Step 1, install dependencies
 ```bash
@@ -1380,7 +1380,7 @@ See the Dockerfile at the project root. The port is configurable via a `PORT` en
 - `422` on `/grade`: the repo URL couldn't be reached (private without `ieeemansb1` access, wrong URL, deleted repo, ...)
 ```
 
-- [ ] **Step 5: Rewrite `src/README.md`**
+- [x] **Step 5: Rewrite `src/README.md`**
 
 Replace the full contents of `src/README.md` with:
 
@@ -1394,7 +1394,7 @@ Replace the full contents of `src/README.md` with:
 `debug_retrieval.py`: a small diagnostic tool. Shows exactly which knowledge-base chunks get retrieved for a given question, with no LLM involved. Useful when the chatbot seems to be missing something that should be in the rules document, since this tells you whether it's a retrieval problem or something else.
 ```
 
-- [ ] **Step 6: Rewrite `src/api/README.md`**
+- [x] **Step 6: Rewrite `src/api/README.md`**
 
 Replace the full contents of `src/api/README.md` with:
 
@@ -1420,7 +1420,7 @@ poetry run uvicorn src.api.main:app --reload
 ```
 ```
 
-- [ ] **Step 7: Rewrite `src/agent/README.md`**
+- [x] **Step 7: Rewrite `src/agent/README.md`**
 
 Replace the full contents of `src/agent/README.md` with:
 
@@ -1449,7 +1449,7 @@ The grading agent. Reads a submitted repo and produces a scored, evidence-cited 
 Everything here gets called from `src/api/main.py` (or `src/visualize_graphs.py` for diagram generation). There's no reason to run any of these files directly, except `state.py`, `rubric.py`, and `llm.py`, which aren't runnable at all since they define things other files use.
 ```
 
-- [ ] **Step 8: Fix `src/chatbot/README.md`**
+- [x] **Step 8: Fix `src/chatbot/README.md`**
 
 Replace the full contents of `src/chatbot/README.md` with:
 
@@ -1473,12 +1473,12 @@ The team support chatbot. Answers questions using only the rules document (via `
 `ask()`/`answer_question()` take `history` as a plain argument -- a list of `{"role": "user" | "assistant", "content": str}` dicts, oldest first. There is no `thread_id` and nothing is persisted here: the caller (victoris-backend) is responsible for storing every message and passing back whatever it wants remembered on the next call.
 ```
 
-- [ ] **Step 9: Run the full test suite one more time to confirm the doc-only changes broke nothing**
+- [x] **Step 9: Run the full test suite one more time to confirm the doc-only changes broke nothing**
 
 Run: `poetry run pytest -v`
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add CLAUDE.md README.md SETUP_GUIDE.md src/README.md src/api/README.md src/agent/README.md src/chatbot/README.md
