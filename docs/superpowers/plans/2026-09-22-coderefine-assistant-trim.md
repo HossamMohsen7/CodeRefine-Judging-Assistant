@@ -708,7 +708,7 @@ EOF
 
 `job_queue.py` (the single-worker background thread that paced submissions) and `auth.py` (password login + in-memory session tokens) both existed only to serve the old `/login/*` and `/submit` endpoints. Neither has a role in the new synchronous, bearer-token-only API, so both are deleted here rather than kept as unused code. CORS middleware and `slowapi` rate limiting are also dropped: the spec is explicit that "this service is never called directly by a browser", so there's no browser origin to allow, and rate limiting an internal service reachable only by victoris-backend behind a shared secret isn't something the spec asks for.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/test_api_main.py`:
 
@@ -805,18 +805,18 @@ def test_grade_returns_422_on_repo_error(monkeypatch):
     assert response.json() == {"error": "Could not access repo: 404"}
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `poetry run pytest tests/test_api_main.py -v`
 Expected: FAIL — `src.api.main` still imports `src.api.auth`/`src.api.job_queue`, has no `/grade` route, and `/chat`/`/grade` aren't token-gated yet.
 
-- [ ] **Step 3: Delete `src/api/auth.py` and `src/api/job_queue.py`**
+- [x] **Step 3: Delete `src/api/auth.py` and `src/api/job_queue.py`**
 
 ```bash
 git rm src/api/auth.py src/api/job_queue.py
 ```
 
-- [ ] **Step 4: Write `src/api/main.py`**
+- [x] **Step 4: Write `src/api/main.py`**
 
 Replace the full contents of `src/api/main.py` with:
 
@@ -914,17 +914,17 @@ def health() -> dict:
 
 Note the top-level imports of `answer_question`, `grade_repo`, and `format_grade_response` (rather than importing inside each route function, which the old `main.py` did) -- this matches the rest of the repo's test convention of monkeypatching a name directly on the consuming module (e.g. `monkeypatch.setattr(nodes, "find_submission_files", ...)` in `tests/test_gather_node.py`), which only works if the name is bound at module import time.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `poetry run pytest tests/test_api_main.py -v`
 Expected: PASS (7 tests).
 
-- [ ] **Step 6: Run the full test suite to verify nothing else broke**
+- [x] **Step 6: Run the full test suite to verify nothing else broke**
 
 Run: `poetry run pytest -v`
 Expected: PASS (every test from Tasks 1-3).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/api/main.py tests/test_api_main.py
