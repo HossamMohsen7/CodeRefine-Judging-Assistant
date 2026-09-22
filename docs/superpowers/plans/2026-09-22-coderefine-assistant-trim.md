@@ -963,19 +963,19 @@ EOF
 
 By the end of Task 3, nothing in `src/agent/`, `src/api/`, or `src/chatbot/` references any of these modules any more. The only remaining consumer is the CLI (`src/main.py`), whose `submit`/`review`/`approve`/`release`/`report` subcommands only ever existed to drive the now-deleted attempt-tracking and review-queue workflow. `logs/review_queue.json` is a stray, git-tracked leftover from an earlier JSON-file version of the review queue (predates the SQLite rewrite; not covered by `.gitignore`'s `logs/*.jsonl`/`logs/review_queue.db` rules since its extension is plain `.json`) -- dead data with no reader left in the trimmed service. `web/index.html` is entirely the old team/judge login UI calling `/login/team`, `/login/judge`, `/submit`, `/queue`, `/approve`, `/release` (confirmed by reading it) -- none of those routes exist any more, and `src/api/main.py` no longer serves it at `/`.
 
-- [ ] **Step 1: Delete the persistence/audit/batch modules and the stray JSON file**
+- [x] **Step 1: Delete the persistence/audit/batch modules and the stray JSON file**
 
 ```bash
 git rm src/agent/attempt_tracker.py src/agent/practice_store.py src/agent/review_queue.py src/agent/report.py src/logging_utils.py src/batch_grade.py logs/review_queue.json
 ```
 
-- [ ] **Step 2: Delete the old website**
+- [x] **Step 2: Delete the old website**
 
 ```bash
 git rm -r web/
 ```
 
-- [ ] **Step 3: Trim `src/main.py` to just the `chat` subcommand**
+- [x] **Step 3: Trim `src/main.py` to just the `chat` subcommand**
 
 Replace the full contents of `src/main.py` with:
 
@@ -1031,17 +1031,17 @@ if __name__ == "__main__":
 
 This CLI was never covered by an automated test (no existing test imports `src.main`), so no test file changes here -- the `submit`/`review`/`approve`/`release`/`report` subcommands are simply gone along with the modules they drove.
 
-- [ ] **Step 4: Grep for any remaining references to the deleted modules**
+- [x] **Step 4: Grep for any remaining references to the deleted modules**
 
 Run: `grep -rn "attempt_tracker\|practice_store\|review_queue\|agent\.report\|logging_utils\|batch_grade" src/ tests/`
 Expected: no output (empty). If anything matches, it's a leftover import or comment that must be fixed before continuing -- fix it and re-run.
 
-- [ ] **Step 5: Run the full test suite to verify nothing broke**
+- [x] **Step 5: Run the full test suite to verify nothing broke**
 
 Run: `poetry run pytest -v`
 Expected: PASS (every test from Tasks 1-3; this task touches no test-covered code paths).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A src/main.py
