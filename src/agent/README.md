@@ -15,7 +15,7 @@ The grading agent. Reads a submitted repo and produces a scored, evidence-cited 
 - `format_node`, turns those observations into a scored draft, citing evidence by ID rather than copied text so verification doesn't break on paraphrasing.
 - `verify_node`, a plain code check (no LLM call) that confirms cited evidence actually exists, and flags any justification that looks like it invented a scoring threshold not in the rubric.
 
-`graph.py`: wires the three functions above into one runnable LangGraph flow. `grade_repo(repo_url)` is the one function `POST /grade` calls -- runs the pipeline, returns the full final state. `format_grade_response(final_scorecard, verification_notes)` is a separate pure function that reshapes that internal state into `POST /grade`'s exact `{score, feedback, evidence}` response.
+`graph.py`: wires the three functions above into one runnable LangGraph flow. `grade_repo(repo_url)` is the one function `POST /grade` calls -- runs the pipeline, returns the full final state. `format_grade_response(final_scorecard, verification_notes)` is a separate pure function that reshapes that internal state into `POST /grade`'s exact `{score, scorecard, verificationNotes}` response.
 
 ## Nothing in this folder runs on its own
 

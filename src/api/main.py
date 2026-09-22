@@ -55,10 +55,17 @@ class GradeRequest(BaseModel):
     repoUrl: str
 
 
+class ScorecardItem(BaseModel):
+    criterion: str
+    scorePercent: int
+    confidence: str
+    justification: str
+
+
 class GradeResponse(BaseModel):
     score: int
-    feedback: str
-    evidence: str
+    scorecard: list[ScorecardItem]
+    verificationNotes: str
 
 
 @app.post("/chat", response_model=ChatResponse, dependencies=[Depends(require_service_token)])

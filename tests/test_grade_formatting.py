@@ -22,8 +22,18 @@ def test_format_grade_response_sums_score_and_includes_criteria():
     result = format_grade_response(scorecard, "All evidence checked out.")
 
     assert result["score"] == 25
-    assert "Data Model" in result["feedback"]
-    assert "API Design" in result["feedback"]
-    assert "README.md" in result["evidence"]
-    assert "No cited evidence." in result["evidence"]
-    assert result["evidence"].startswith("Verification: All evidence checked out.")
+    assert result["verificationNotes"] == "All evidence checked out."
+    assert result["scorecard"] == [
+        {
+            "criterion": "Data Model",
+            "scorePercent": 15,
+            "confidence": "high",
+            "justification": "Covers all entities.",
+        },
+        {
+            "criterion": "API Design",
+            "scorePercent": 10,
+            "confidence": "low",
+            "justification": "Partial coverage.",
+        },
+    ]

@@ -45,7 +45,7 @@ def test_chat_returns_answer(monkeypatch):
     assert response.json() == {"answer": "echo: How many members per team?"}
 
 
-def test_grade_returns_score_feedback_evidence(monkeypatch):
+def test_grade_returns_score_scorecard_verification_notes(monkeypatch):
     monkeypatch.setattr(api_main, "grade_repo", lambda repo_url: {
         "final_scorecard": [{
             "criterion": "X", "score_percent": 10, "justification": "j",
@@ -64,8 +64,10 @@ def test_grade_returns_score_feedback_evidence(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert body["score"] == 10
-    assert "X" in body["feedback"]
-    assert "X" in body["evidence"]
+    assert body["verificationNotes"] == "All evidence checked out."
+    assert body["scorecard"] == [
+        {"criterion": "X", "scorePercent": 10, "confidence": "high", "justification": "j"}
+    ]
 
 
 def test_grade_rejects_missing_token():
