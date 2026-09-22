@@ -154,12 +154,24 @@ def fetch_file_bytes(repo_url: str, file_path: str) -> bytes:
 
 
 def _repo_name_from_url(repo_url: str) -> str:
-    """Turns 'https://github.com/owner/repo' into 'owner/repo' for PyGithub."""
+    """
+    Turns 'https://github.com/owner/repo' into 'owner/repo' for PyGithub.
+
+    Teams commonly paste the URL straight from their browser while
+    viewing a specific branch/file/tab, not the bare repo root (e.g.
+    '.../owner/repo/tree/main', '.../owner/repo/blob/main/README.md') --
+    only the first two path segments after 'github.com/' are ever the
+    owner/repo, so everything past that is dropped rather than passed to
+    PyGithub as part of the repo name.
+    """
     cleaned = repo_url.rstrip("/").removesuffix(".git")
     parts = cleaned.split("github.com/")
     if len(parts) != 2:
         raise ValueError(f"'{repo_url}' doesn't look like a GitHub repo URL.")
-    return parts[1]
+    path_parts = parts[1].split("/")
+    if len(path_parts) < 2:
+        raise ValueError(f"'{repo_url}' doesn't look like a GitHub repo URL.")
+    return "/".join(path_parts[:2])
 
 
 def find_external_resource_links(readme_content: str) -> list[str]:
